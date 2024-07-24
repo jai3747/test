@@ -1,0 +1,109 @@
+name: Security Scans
+
+on: [push, pull_request]
+
+jobs:
+  snyk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        if: exists('package.json')
+        with:
+          node-version: '14'
+
+      - name: Install dependencies for Node.js
+        run: npm install
+        if: exists('package.json')
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        if: exists('requirements.txt')
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies for Python
+        run: pip install -r requirements.txt
+        if: exists('requirements.txt')
+
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        if: exists('pom.xml')
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+
+      - name: Install dependencies for Java
+        run: mvn install
+        if: exists('pom.xml')
+
+      - name: Set up Ruby
+        uses: actions/setup-ruby@v1
+        if: exists('Gemfile')
+        with:
+          ruby-version: '2.7'
+
+      - name: Install dependencies for Ruby
+        run: bundle install
+        if: exists('Gemfile')
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        if: exists('composer.json')
+        with:
+          php-version: '7.4'
+
+      - name: Install dependencies for PHP
+        run: composer install
+        if: exists('composer.json')
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/setup@v2
+        with:
+          token: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Test code with Snyk
+        run: snyk test
+
+      - name: Monitor code with Snyk
+        run: snyk monitor
+
+  snyk_code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        if: exists('package.json')
+        with:
+          node-version: '14'
+
+      - name: Run Snyk Code to check for code issues
+        uses: snyk/actions/setup@v2
+        with:
+          token: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Test code with Snyk Code
+        run: snyk code test
+
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run Semgrep
+        run: semgrep --config=p/ci
