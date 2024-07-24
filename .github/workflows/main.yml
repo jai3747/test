@@ -1,12 +1,13 @@
-name: Security Scans
+name: CI/CD Pipeline
 
 on: [push, pull_request]
 
 jobs:
-  install_dependencies_and_scan:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Set up Node.js
@@ -14,79 +15,59 @@ jobs:
         with:
           node-version: '14'
 
-      - name: Install Node.js dependencies
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npx eslint .
+
+      - name: Run npm audit
+        run: npm audit
+
+      - name: Build and test
         run: |
-          if [ -f "package.json" ]; then
-            npm install
-          fi
+          npm run build
+          npm test
+
+  snyk:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Snyk Dependency Scan
+        uses: snyk/actions/node@v3
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+
+  semgrep:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
 
-      - name: Install Python dependencies
-        run: |
-          if [ -f "requirements.txt" ]; then
-            pip install -r requirements.txt
-          fi
-
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          java-version: '11'
-          distribution: 'adopt'
-
-      - name: Install Java dependencies
-        run: |
-          if [ -f "pom.xml" ]; then
-            mvn install
-          fi
-
-      - name: Set up Ruby
-        uses: actions/setup-ruby@v1
-        with:
-          ruby-version: '2.7'
-
-      - name: Install Ruby dependencies
-        run: |
-          if [ -f "Gemfile" ]; then
-            bundle install
-          fi
-
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '7.4'
-
-      - name: Install PHP dependencies
-        run: |
-          if [ -f "composer.json" ]; then
-            composer install
-          fi
-
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/setup@v1
-        with:
-          token: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Test code with Snyk
-        run: snyk test
-
-      - name: Monitor code with Snyk
-        run: snyk monitor
-
-      - name: Run Snyk Code to check for code issues
-        uses: snyk/actions/setup@v1
-        with:
-          token: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Test code with Snyk Code
-        run: snyk code test
-
       - name: Install Semgrep
         run: pip install semgrep
 
       - name: Run Semgrep
-        run: semgrep --config=p/ci
-
+        run: semgrep --config=auto .
+        
