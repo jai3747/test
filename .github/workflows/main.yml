@@ -9,71 +9,96 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Check for Node.js dependencies
+        run: |
+          if [ -f "package.json" ]; then
+            echo "Node.js dependencies found";
+          else
+            echo "Node.js dependencies not found" && exit 0;
+          fi
+
       - name: Set up Node.js
-        if: exists('package.json')
+        if: steps.node_deps.outputs.node_found == 'true'
         uses: actions/setup-node@v2
         with:
           node-version: '14'
 
       - name: Install dependencies for Node.js
-        if: exists('package.json')
+        if: steps.node_deps.outputs.node_found == 'true'
         run: npm install
 
+      - name: Check for Python dependencies
+        run: |
+          if [ -f "requirements.txt" ]; then
+            echo "Python dependencies found";
+          else
+            echo "Python dependencies not found" && exit 0;
+          fi
+
       - name: Set up Python
-        if: exists('requirements.txt')
+        if: steps.python_deps.outputs.python_found == 'true'
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
 
       - name: Install dependencies for Python
-        if: exists('requirements.txt')
+        if: steps.python_deps.outputs.python_found == 'true'
         run: pip install -r requirements.txt
 
+      - name: Check for Java dependencies
+        run: |
+          if [ -f "pom.xml" ]; then
+            echo "Java dependencies found";
+          else
+            echo "Java dependencies not found" && exit 0;
+          fi
+
       - name: Set up Java
-        if: exists('pom.xml')
+        if: steps.java_deps.outputs.java_found == 'true'
         uses: actions/setup-java@v2
         with:
           java-version: '11'
           distribution: 'adopt'
 
       - name: Install dependencies for Java
-        if: exists('pom.xml')
+        if: steps.java_deps.outputs.java_found == 'true'
         run: mvn install
 
+      - name: Check for Ruby dependencies
+        run: |
+          if [ -f "Gemfile" ]; then
+            echo "Ruby dependencies found";
+          else
+            echo "Ruby dependencies not found" && exit 0;
+          fi
+
       - name: Set up Ruby
-        if: exists('Gemfile')
+        if: steps.ruby_deps.outputs.ruby_found == 'true'
         uses: actions/setup-ruby@v1
         with:
           ruby-version: '2.7'
 
       - name: Install dependencies for Ruby
-        if: exists('Gemfile')
+        if: steps.ruby_deps.outputs.ruby_found == 'true'
         run: bundle install
 
+      - name: Check for PHP dependencies
+        run: |
+          if [ -f "composer.json" ]; then
+            echo "PHP dependencies found";
+          else
+            echo "PHP dependencies not found" && exit 0;
+          fi
+
       - name: Set up PHP
-        if: exists('composer.json')
+        if: steps.php_deps.outputs.php_found == 'true'
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
 
       - name: Install dependencies for PHP
-        if: exists('composer.json')
+        if: steps.php_deps.outputs.php_found == 'true'
         run: composer install
-
-      - name: Debug Information
-        run: |
-          echo "Node.js version:"
-          node --version || echo "Node.js not installed"
-          echo "NPM version:"
-          npm --version || echo "NPM not installed"
-          echo "Python version:"
-          python --version || echo "Python not installed"
-          echo "Maven version:"
-          mvn --version || echo "Maven not installed"
-          echo "Ruby version:"
-          ruby --version || echo "Ruby not installed"
-          echo "PHP version:"
-          php --version || echo "PHP not installed"
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/setup@v2
@@ -93,7 +118,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Node.js
-        if: exists('package.json')
+        if: steps.node_deps.outputs.node_found == 'true'
         uses: actions/setup-node@v2
         with:
           node-version: '14'
