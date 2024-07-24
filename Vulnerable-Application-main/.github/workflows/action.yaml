@@ -1,0 +1,138 @@
+name: 'Guardian Pipeline'
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+    steps:
+    - name: Test
+      shell: bash
+      run: |-
+        ls -la 
+        pwd
+        cd ..
+        ls -la
+        
+    - name: Check out code
+      uses: actions/checkout@v2
+      
+    - name: Display Changeset
+      shell: bash
+      id: set-env
+      run: |
+        BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        COMMIT_ID=$(git rev-parse HEAD)
+        echo "BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
+        echo "COMMIT_ID=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        echo "SERVICE_NAME=kotlin-backend" >> $GITHUB_OUTPUT
+        echo "PROJECT_ID=kotlin-backend" >> $GITHUB_OUTPUT
+        echo "TICKET_ID=kotlin-backend" >> $GITHUB_OUTPUT
+
+    - name: SAST Scan
+      shell: bash
+      run: |
+        echo "Branch Name: ${{ steps.set-env.outputs.BRANCH }}"
+        echo "Commit Id: ${{ steps.set-env.outputs.COMMIT_ID }}"
+        echo "Service Name: ${{ steps.set-env.outputs.SERVICE_NAME }}"
+        sudo yum update
+        sudo yum install python3-pip -y
+        python3 -m pip install semgrep 
+        semgrep --version
+        semgrep scan --json >kotlin-sast.json
+        curl -X POST \
+          -H 'Content-Type: multipart/form-data' \
+          --form 'branch=${{ steps.set-env.outputs.BRANCH }}' \
+          --form 'commit=${{ steps.set-env.outputs.COMMIT_ID }}' \
+          --form 'report=@"kotlin-sast.json"' \
+          http://15.206.113.72:8087/api/v1/sast/report?serviceName=${{ steps.set-env.outputs.SERVICE_NAME }}&ticketId=${{ steps.set-env.outputs.TICKET_ID }}&projectid=${{ steps.set-env.outputs.PROJECT_ID }}
+
+    - name: Upload Reports
+      uses: actions/upload-artifact@v2
+      with:
+        name: sast-report
+        path: kotlin-sast.json
+  
+    - name: Remove local report
+      shell: bash
+      run: rm kotlin-sast.json
+
+    # - name: SCA Scan
+    #   shell: bash
+    #   run: |
+    #     sudo yum update
+    #     sudo yum install default-jre -y
+    #     sudo yum install default-jdk -y
+    #     VERSION=$(curl -s https://jeremylong.github.io/DependencyCheck/current.txt)
+    #     curl -Ls "https://github.com/jeremylong/DependencyCheck/releases/download/v$VERSION/dependency-check-$VERSION-release.zip" --output dependency-check.zip
+    #     unzip dependency-check.zip
+    #     ./dependency-check/bin/dependency-check.sh --scan . --format "JSON" --out kotlin-sca.json
+    #     curl -X POST \
+    #       -H 'Content-Type: multipart/form-data' \
+    #       --form 'report=@"kotlin-sca.json"' \
+    #       http://15.206.113.72:8087/api/v1/sca/import?serviceName=${{ steps.set-env.outputs.SERVICE_NAME }}&ticketId=${{ steps.set-env.outputs.TICKET_ID }}&projectId=${{ steps.set-env.outputs.PROJECT_ID }}
+  
+    # - name: Upload SCA Reports
+    #   uses: actions/upload-artifact@v2
+    #   with:
+    #     name: sca-report
+    #     path: kotlin-sca.json
+  
+    # - name: Remove local report
+    #   shell: bash
+    #   run: rm kotlin-sca.json
+  
+    # - name: Container Scan
+    #   uses: aquasecurity/trivy-action@master
+    #   with:
+    #     image-ref: '${{ inputs.REGISTRY_HOSTNAME }}/${{ inputs.PROJECT_ID }}/${{ inputs.IMAGE }}:${{ steps.slug.outputs.sha8 }}'
+    #     format: 'json'
+    #     output: 'kotlin-container.json'
+
+    # - name: Container Scan API
+    #   shell: bash
+    #   run: |
+    #     echo "Service Name: ${{ steps.set-env.outputs.SERVICE_NAME }}"
+    #     echo "TICKET ID: ${{ steps.set-env.outputs.TICKET_ID }}"
+    #     echo "PROJECT ID: ${{ steps.set-env.outputs.PROJECT_ID }}"
+    #     curl -X POST \
+    #       -H 'Content-Type: multipart/form-data' \
+    #       --form 'report=@"kotlin-container.json"' \
+    #       http://15.206.113.72:8087/api/v1/container/import?serviceName=${{ steps.set-env.outputs.SERVICE_NAME }}&ticketId=${{ steps.set-env.outputs.TICKET_ID }}&projectId=${{ steps.set-env.outputs.PROJECT_ID }}
+  
+    # - name: Upload Container Reports
+    #   uses: actions/upload-artifact@v2
+    #   with:
+    #     name: Container-report
+    #     path: kotlin-container.json
+  
+    # - name: Remove local report
+    #   shell: bash
+    #   run: rm kotlin-container.json
+  
+    # - name: IAC Scan
+    #   uses: aquasecurity/trivy-action@master
+    #   with:
+    #     scan-type: 'config'
+    #     format: 'json'
+    #     output: 'kotlin-iac.json'
+
+    # - name: IAC Scan API
+    #   shell: bash
+    #   run: |
+    #     curl -X POST \
+    #       -H 'Content-Type: multipart/form-data' \
+    #       --form 'report=@"kotlin-iac.json"' \
+    #       http://15.206.113.72:8087/api/v1/iac/import?serviceName=${{ steps.set-env.outputs.SERVICE_NAME }}&ticketId=${{ steps.set-env.outputs.TICKET_ID }}&projectId=${{ steps.set-env.outputs.PROJECT_ID }}
+  
+    # - name: Upload IAC Reports
+    #   uses: actions/upload-artifact@v2
+    #   with:
+    #     name: IAC-report
+    #     path: kotlin-iac.json
+  
+    # - name: Remove local report
+    #   shell: bash
+    #   run: rm kotlin-iac.json
