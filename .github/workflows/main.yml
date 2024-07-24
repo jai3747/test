@@ -3,82 +3,67 @@ name: Security Scans
 on: [push, pull_request]
 
 jobs:
-  snyk:
+  install_dependencies_and_scan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Check for Node.js dependencies
-        id: check_node
-        run: echo "node=$(test -f package.json && echo true || echo false)" >> $GITHUB_ENV
-
       - name: Set up Node.js
-        if: env.node == 'true'
         uses: actions/setup-node@v2
         with:
           node-version: '14'
 
-      - name: Install dependencies for Node.js
-        if: env.node == 'true'
-        run: npm install
-
-      - name: Check for Python dependencies
-        id: check_python
-        run: echo "python=$(test -f requirements.txt && echo true || echo false)" >> $GITHUB_ENV
+      - name: Install Node.js dependencies
+        run: |
+          if [ -f "package.json" ]; then
+            npm install
+          fi
 
       - name: Set up Python
-        if: env.python == 'true'
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
 
-      - name: Install dependencies for Python
-        if: env.python == 'true'
-        run: pip install -r requirements.txt
-
-      - name: Check for Java dependencies
-        id: check_java
-        run: echo "java=$(test -f pom.xml && echo true || echo false)" >> $GITHUB_ENV
+      - name: Install Python dependencies
+        run: |
+          if [ -f "requirements.txt" ]; then
+            pip install -r requirements.txt
+          fi
 
       - name: Set up Java
-        if: env.java == 'true'
         uses: actions/setup-java@v2
         with:
           java-version: '11'
           distribution: 'adopt'
 
-      - name: Install dependencies for Java
-        if: env.java == 'true'
-        run: mvn install
-
-      - name: Check for Ruby dependencies
-        id: check_ruby
-        run: echo "ruby=$(test -f Gemfile && echo true || echo false)" >> $GITHUB_ENV
+      - name: Install Java dependencies
+        run: |
+          if [ -f "pom.xml" ]; then
+            mvn install
+          fi
 
       - name: Set up Ruby
-        if: env.ruby == 'true'
         uses: actions/setup-ruby@v1
         with:
           ruby-version: '2.7'
 
-      - name: Install dependencies for Ruby
-        if: env.ruby == 'true'
-        run: bundle install
-
-      - name: Check for PHP dependencies
-        id: check_php
-        run: echo "php=$(test -f composer.json && echo true || echo false)" >> $GITHUB_ENV
+      - name: Install Ruby dependencies
+        run: |
+          if [ -f "Gemfile" ]; then
+            bundle install
+          fi
 
       - name: Set up PHP
-        if: env.php == 'true'
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
 
-      - name: Install dependencies for PHP
-        if: env.php == 'true'
-        run: composer install
+      - name: Install PHP dependencies
+        run: |
+          if [ -f "composer.json" ]; then
+            composer install
+          fi
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/setup@v2
@@ -91,22 +76,6 @@ jobs:
       - name: Monitor code with Snyk
         run: snyk monitor
 
-  snyk_code:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Check for Node.js dependencies
-        id: check_node
-        run: echo "node=$(test -f package.json && echo true || echo false)" >> $GITHUB_ENV
-
-      - name: Set up Node.js
-        if: env.node == 'true'
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
       - name: Run Snyk Code to check for code issues
         uses: snyk/actions/setup@v2
         with:
@@ -115,19 +84,14 @@ jobs:
       - name: Test code with Snyk Code
         run: snyk code test
 
-  semgrep:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
-
       - name: Install Semgrep
         run: pip install semgrep
 
       - name: Run Semgrep
         run: semgrep --config=p/ci
+
+      - name: Install and scan with SAST (SCA) tools
+        run: |
+          if [ -f "requirements.txt" ]; then
+            # Add SCA and SAST tool installation and scanning commands here
+          fi
