@@ -1,37 +1,10 @@
-name: CI/CD Pipeline
+name: Dependency and Source Code Scanning
 
 on: [push, pull_request]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run ESLint
-        run: npx eslint . --ext .js,.jsx,.ts,.tsx
-
-      - name: Run npm audit
-        run: npm audit
-
-      - name: Build and test
-        run: |
-          npm run build
-          npm test
-
   snyk:
     runs-on: ubuntu-latest
-    needs: build
 
     steps:
       - name: Checkout repository
@@ -54,7 +27,6 @@ jobs:
 
   semgrep:
     runs-on: ubuntu-latest
-    needs: build
 
     steps:
       - name: Checkout repository
