@@ -19,7 +19,7 @@ jobs:
         run: npm install
 
       - name: Snyk Dependency Scan
-        uses: snyk/actions/node@v1  # Use the correct version of Snyk action
+        uses: snyk/actions/node@v2  # Update to the correct version of Snyk action
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
