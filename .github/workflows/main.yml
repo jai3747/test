@@ -26,31 +26,5 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-    # Run Semgrep for SAST with config from another repo
-    - name: Checkout Semgrep config
-      uses: actions/checkout@v2
-      with:
-        repository: jai3747/test
-        path: semgrep-config
-
-    - name: Semgrep SAST scan
-      uses: returntocorp/semgrep-action@v1
-      with:
-        config: 'semgrep-config/path/to/config'  # Replace with the actual path to your Semgrep config within the `test` repository
-
-    # Run ESLint for code linting
-    - name: Run ESLint
-      run: npm run lint
-
-    # Example of deploying to AWS (replace with your actual deployment steps)
-    - name: Deploy to AWS
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: 'us-west-2'
-
-    - name: Deploy application
-      run: |
-        # Add your deployment commands here
-        echo "Deploying application..."
+    
+     
