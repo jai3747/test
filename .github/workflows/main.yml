@@ -13,13 +13,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '16'  # Ensure Node.js version is 16.x
 
       - name: Install dependencies
         run: npm install
 
       - name: Run ESLint
-        run: npx eslint .
+        run: npx eslint . --ext .js # Specify file extensions
 
       - name: Run npm audit
         run: npm audit
@@ -40,7 +40,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '16'
 
       - name: Install dependencies
         run: npm install
@@ -70,4 +70,3 @@ jobs:
 
       - name: Run Semgrep
         run: semgrep --config=auto .
-        
