@@ -1,30 +1,28 @@
-name: CI
+name: Semgrep Workflow
 
 on: [push, pull_request]
 
 jobs:
-  sca_and_sast:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
+      - name: Install semgrep
+        run: |
+          # Install semgrep
+          curl -L https://semgrep.dev/install.sh | bash -s -- -c stable
 
-    - name: Install dependencies
-      run: npm install
+      - name: Run semgrep with API token
+        env:
+          SEMGREP_API_TOKEN: ${{ secrets.SEMGREP_API_TOKEN }}
+        run: |
+          # Set up semgrep with API token
+          echo "token: $SEMGREP_API_TOKEN" > ~/.semgrep.yml
+          
+          # Run semgrep on your codebase
+          semgrep --config=p/r/python3 --json .
 
-    # Run Snyk for SCA
-    - name: Snyk SCA scan
-      uses: snyk/actions/node@master
-      with:
-        args: monitor
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-    
-     
+      # Add more steps as needed for your workflow
