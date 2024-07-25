@@ -1,28 +1,36 @@
-name: Semgrep Workflow
+name: Semgrep Pipeline
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main  # Adjust this to the branch you want to trigger on
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install semgrep
+      - name: Install Python 3.9 and dependencies
         run: |
-          # Install semgrep using the official installation script
-          curl -L https://semgrep.dev/install.sh | sh -s -- -c stable
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository -y ppa:deadsnakes/ppa
+          sudo apt-get update
+          sudo apt-get install -y python3.9 python3-pip
 
-      - name: Run semgrep with API token
-        env:
-          SEMGREP_API_TOKEN: ${{ secrets.SEMGREP_API_TOKEN }}
+      - name: Install Semgrep
         run: |
-          # Set up semgrep with API token
-          echo "token: $SEMGREP_API_TOKEN" > ~/.semgrep.yml
-          
-          # Run semgrep on your codebase
-          semgrep --config=p/r/python3 --json .
+          python3.9 -m pip install semgrep --break-system-packages
 
-      # Add more steps as needed for your workflow
+      - name: Verify Semgrep installation
+        run: |
+          semgrep --version
+
+      - name: Run Semgrep analysis
+        run: |
+          semgrep --config=policies/semgrep.yml .
+
+      # Additional steps for your pipeline can be added here
