@@ -17,7 +17,7 @@ jobs:
 
       - name: Run semgrep with API token
         env:
-          SEMGREP_API_TOKEN: ${{ secrets.SEMGREP_API_TOKEN }}
+          SEMGREP_API_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
         run: |
           # Set up semgrep with API token
           echo "token: $SEMGREP_API_TOKEN" > ~/.semgrep.yml
