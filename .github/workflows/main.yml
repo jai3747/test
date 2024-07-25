@@ -1,44 +1,34 @@
-name: Dependency and Source Code Scanning
+name: CI
 
 on: [push, pull_request]
 
 jobs:
-  snyk:
+  sca_and_sast:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3  # Use the latest stable version of checkout action
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3  # Use the latest version of setup-node action
-        with:
-          node-version: '16'
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
 
-      - name: Install dependencies
-        run: npm install
+    # Install dependencies
+    - name: Install dependencies
+      run: npm install
 
-      - name: Snyk Dependency Scan
-        uses: snyk/actions/node@v2  # Update to the correct version of Snyk action
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: test
+    # Run Snyk for SCA
+    - name: Snyk SCA scan
+      uses: snyk/actions/node@master
+      with:
+        args: monitor
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-  semgrep:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3  # Use the latest stable version of checkout action
-
-      - name: Set up Python
-        uses: actions/setup-python@v4  # Use the latest version of setup-python action
-        with:
-          python-version: '3.x'
-
-      - name: Install Semgrep
-        run: pip install semgrep
-
-      - name: Run Semgrep
-        run: semgrep --config=auto .
+    # Run Semgrep for SAST
+    - name: Semgrep SAST scan
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: 'auto'
