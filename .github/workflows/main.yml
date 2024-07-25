@@ -3,7 +3,7 @@ name: Semgrep Pipeline
 on:
   push:
     branches:
-      - main  # Adjust this to the branch you want to trigger on
+      - main  
 
 jobs:
   build-and-test:
