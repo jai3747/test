@@ -19,7 +19,7 @@ jobs:
         run: npm install
 
       - name: Snyk Dependency Scan
-        uses: snyk/actions/node@v3
+        uses: snyk/actions/node@v2
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
