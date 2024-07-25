@@ -12,12 +12,12 @@ jobs:
 
       - name: Install semgrep
         run: |
-          # Install semgrep
-          curl -L https://semgrep.dev/install.sh | bash -s -- -c stable
+          # Install semgrep using the official installation script
+          curl -L https://semgrep.dev/install.sh | sh -s -- -c stable
 
       - name: Run semgrep with API token
         env:
-          SEMGREP_API_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+          SEMGREP_API_TOKEN: ${{ secrets.SEMGREP_API_TOKEN }}
         run: |
           # Set up semgrep with API token
           echo "token: $SEMGREP_API_TOKEN" > ~/.semgrep.yml
