@@ -26,11 +26,17 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-    # Run Semgrep for SAST
+    # Run Semgrep for SAST with config from another repo
+    - name: Checkout Semgrep config
+      uses: actions/checkout@v2
+      with:
+        repository: jai3747/test
+        path: semgrep-config
+
     - name: Semgrep SAST scan
       uses: returntocorp/semgrep-action@v1
       with:
-        config: 'auto'
+        config: 'semgrep-config/path/to/config'  # Replace with the actual path to your Semgrep config within the `test` repository
 
     # Run ESLint for code linting
     - name: Run ESLint
